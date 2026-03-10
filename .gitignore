@@ -1,0 +1,99 @@
+# =========================
+# Node / Bun
+# =========================
+
+# dependencies
+node_modules
+
+# build output
+out
+dist
+*.tgz
+
+# coverage
+coverage
+*.lcov
+
+# logs
+logs
+*.log
+report.*.json
+
+# environment variables
+.env
+.env.*
+!.env.example
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# =========================
+# Python / ML
+# =========================
+
+# virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# python build
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+
+# Jupyter notebooks
+.ipynb_checkpoints
+
+# ML model artifacts
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.model
+
+# dataset files
+data/
+datasets/
+
+# training outputs
+runs/
+checkpoints/
+
+# =========================
+# Docker
+# =========================
+
+docker-data/
+*.pid
+
+# =========================
+# IDE / Editors
+# =========================
+
+# IntelliJ
+.idea/
+
+# VSCode
+.vscode/
+
+# Zed
+.zed/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
