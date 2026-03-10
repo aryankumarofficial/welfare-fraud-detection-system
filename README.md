@@ -260,6 +260,16 @@ Bhopal, India
 
 ---
 
+# Contribution Guidelines
+
+See the [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project.
+
+---
+
+# Code of Conduct
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
+
 # License
 
-MIT License
+[MIT License](LICENSE)
