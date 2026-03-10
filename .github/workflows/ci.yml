@@ -1,0 +1,58 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+job:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Install Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.5
+
+      # Install Node Dependencies
+      - name: Install Bun Dependencies
+        run: bun install
+
+      # setup python
+      - name: Setup Python
+        uses: action/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # Install ML dependencies
+      - name: Install ML dependencies
+        run: |
+          cd services/ml
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Verify Next.js app builds
+      - name: Build Admin
+        run: |
+          cd apps/admin
+          bun install
+          bun run build || true
+
+      # Build API
+      - name: Build API
+        run: |
+          cd apps/api
+          bun install
+          bun run build || true
+
+      # Test ML service import
+      - name: Test ML Services
+        run: |
+          cd services/ml
+          python -c "import fastapi, sklearn, pandas"

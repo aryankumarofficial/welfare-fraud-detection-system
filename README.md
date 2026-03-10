@@ -1,5 +1,7 @@
 # Welfare Fraud Detection System
 
+![CI](https://github.com/AryanKumarOfficial/welfare-fraud-detection-system/actions/workflows/ci.yml/badge.svg)
+
 An **AI-powered fraud detection platform** designed to identify suspicious beneficiaries in government welfare distribution systems using **machine learning anomaly detection and risk scoring**.
 
 The system combines **modern web technologies, scalable microservices, and ML models** to detect fraudulent activities early and improve transparency in welfare programs.
