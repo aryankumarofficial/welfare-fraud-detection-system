@@ -1,0 +1,15 @@
+{
+  "name": "@repo/auth",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
