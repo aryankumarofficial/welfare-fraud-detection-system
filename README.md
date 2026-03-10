@@ -251,9 +251,9 @@ Response:
 # Contributors
 
 - [**Aryan Kumar**](https://github.com/AryanKumarOfficial)
-- **Jyoti Patel**
-- **Mayank Satpute**
-- **Veer Singh Chauhan**
+- [**Jyoti Patel**](https://github.com/Jyp25070)
+- [**Mayank Satpute**](https://github.com/mayanksatpute56-lgtm)
+- [**Veer Singh Chauhan**](https://github.com/Veer17104)
 
 Oriental Institute of Science & Technology
 Bhopal, India
