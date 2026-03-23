@@ -1,0 +1,16 @@
+{
+  "extends":"../../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@repo/db/*": ["../../packages/db/src/*"],
+      "@repo/types/*": ["../../packages/types/src/*"],
+      "@repo/analytics/*": ["../../packages/analytics/src/*"],
+      "@repo/llm/*": ["../../packages/llm/src/*"],
+      "@repo/email/*": ["../../packages/email/src/*"]
+            
+    }
+  }
+}

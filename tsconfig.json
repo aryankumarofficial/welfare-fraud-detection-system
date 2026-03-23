@@ -29,7 +29,6 @@
     "paths": {
       "@repo/db": ["packages/db/client.ts"],
       "@repo/auth": ["packages/auth/*"],
-      "@repo/ui": ["packages/ui/*"],
       "@repo/utils": ["packages/utils/*"],
     },
   },
