@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-
-from .predict import predict_all
+from src.predict import predict_all
+from src.test import run_test_predictions
 
 app = FastAPI()
 
@@ -44,3 +44,10 @@ def predict(data: UserData):
     result = predict_all(data.dict())
 
     return {"success": True, "data": result}
+
+
+@app.get("/test")
+def test():
+    pridictions = run_test_predictions()
+
+    return {"success": True, "result": pridictions}
