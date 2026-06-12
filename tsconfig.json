@@ -27,7 +27,8 @@
     "noPropertyAccessFromIndexSignature": false,
     "baseUrl": ".",
     "paths": {
-      "@repo/db": ["packages/db/client.ts"],
+      "@repo/db": ["packages/db/index.ts"],
+      "@repo/db/*": ["packages/db/*"],
       "@repo/auth": ["packages/auth/*"],
       "@repo/utils": ["packages/utils/*"],
     },

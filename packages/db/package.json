@@ -1,16 +1,27 @@
 {
   "name": "@repo/db",
   "version": "1.0.0",
-  "private":true,
+  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
-  "exports":{
-    ".":"./index.ts"
+  "exports": {
+    ".": "./index.ts",
+    "./schema": "./schema/index.ts",
+    "./client": "./client.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "bun run migrate.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "db:check": "drizzle-kit check --config drizzle.config.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.8",
-    "zod": "^4.3.6"
+    "postgres": "^3.4.8"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4"
   }
 }

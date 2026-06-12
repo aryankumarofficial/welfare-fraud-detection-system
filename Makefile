@@ -3,7 +3,7 @@
 # Makefile
 # ==============================
 
-.PHONY: setup dev api admin ml docker-up docker-down install train
+.PHONY: setup dev api admin ml docker-up docker-down install train db-generate db-migrate db-studio
 
 # Install all dependencies
 setup:
@@ -38,3 +38,13 @@ docker-down:
 # Train ML model
 train:
 	cd services/ml && venv/Scripts/python training/train_model.py
+
+# Database migrations
+db-generate:
+	bun run db:generate
+
+db-migrate:
+	bun run db:migrate
+
+db-studio:
+	bun run db:studio

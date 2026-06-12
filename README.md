@@ -26,7 +26,10 @@ The system combines **modern web technologies, scalable microservices, and ML mo
 ### Database
 
 - PostgreSQL
-- Drizzle ORM
+- Drizzle ORM (`packages/db`)
+- SQLAlchemy async consumer in FastAPI (`services/ml/src/db`)
+
+See [Database Architecture](docs/database-architecture.md) for schema ownership, migrations, and service integration.
 
 ### Machine Learning
 
