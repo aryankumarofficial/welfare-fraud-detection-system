@@ -8,7 +8,7 @@ from src.exceptions import PredictionFailedError
 from src.predict import predict_all
 from src.repositories.model_repository import ModelRepository
 from src.repositories.prediction_repository import PredictionRepository
-from src.services.feature_loader import FeatureLoader
+from src.services.feature_loader import FeatureLoader, LoadedFeatures
 
 
 @dataclass(frozen=True)
@@ -33,12 +33,27 @@ class PredictionService:
 
     async def predict_for_snapshot(self, student_profile_id: UUID) -> PredictionResult:
         loaded = await self._feature_loader.load_latest_features(student_profile_id)
+        return await self._predict_loaded_features(loaded)
+
+    async def predict_for_feature_snapshot(
+        self,
+        *,
+        student_profile_id: UUID,
+        feature_snapshot_id: UUID,
+    ) -> PredictionResult:
+        loaded = await self._feature_loader.load_features_by_snapshot_id(
+            student_profile_id=student_profile_id,
+            feature_snapshot_id=feature_snapshot_id,
+        )
+        return await self._predict_loaded_features(loaded)
+
+    async def _predict_loaded_features(self, loaded: LoadedFeatures) -> PredictionResult:
         risks = await self._run_inference(loaded.features)
         model_version = await self._models.get_active()
         model_version_id = model_version.id if model_version is not None else None
 
         record = await self._predictions.create_prediction(
-            student_profile_id=student_profile_id,
+            student_profile_id=loaded.profile.id,
             feature_snapshot_id=loaded.snapshot.id,
             model_version_id=model_version_id,
             income_risk=risks["income_risk"],
@@ -50,7 +65,7 @@ class PredictionService:
         )
 
         return PredictionResult(
-            student_profile_id=student_profile_id,
+            student_profile_id=loaded.profile.id,
             feature_snapshot_id=loaded.snapshot.id,
             prediction_id=record.id,
             model_version_id=model_version_id,

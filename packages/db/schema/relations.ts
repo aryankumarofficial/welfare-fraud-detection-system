@@ -3,6 +3,12 @@ import { auditLogs } from "./audit-logs"
 import { featureSnapshots } from "./feature-snapshots"
 import { modelVersions } from "./model-versions"
 import { predictionRecords } from "./prediction-records"
+import {
+  studentFinancialRecords,
+  studentMedicalSummaries,
+  studentSocialRecords,
+  studentTransactionSummaries,
+} from "./source-records"
 import { studentProfiles } from "./student-profiles"
 import { users } from "./users"
 
@@ -20,7 +26,11 @@ export const studentProfilesRelations = relations(
       references: [users.id],
     }),
     featureSnapshots: many(featureSnapshots),
+    financialRecords: many(studentFinancialRecords),
+    medicalSummaries: many(studentMedicalSummaries),
     predictionRecords: many(predictionRecords),
+    socialRecords: many(studentSocialRecords),
+    transactionSummaries: many(studentTransactionSummaries),
   }),
 )
 
@@ -57,6 +67,46 @@ export const predictionRecordsRelations = relations(
     requestedByUser: one(users, {
       fields: [predictionRecords.requestedByUserId],
       references: [users.id],
+    }),
+  }),
+)
+
+export const studentFinancialRecordsRelations = relations(
+  studentFinancialRecords,
+  ({ one }) => ({
+    studentProfile: one(studentProfiles, {
+      fields: [studentFinancialRecords.studentProfileId],
+      references: [studentProfiles.id],
+    }),
+  }),
+)
+
+export const studentSocialRecordsRelations = relations(
+  studentSocialRecords,
+  ({ one }) => ({
+    studentProfile: one(studentProfiles, {
+      fields: [studentSocialRecords.studentProfileId],
+      references: [studentProfiles.id],
+    }),
+  }),
+)
+
+export const studentTransactionSummariesRelations = relations(
+  studentTransactionSummaries,
+  ({ one }) => ({
+    studentProfile: one(studentProfiles, {
+      fields: [studentTransactionSummaries.studentProfileId],
+      references: [studentProfiles.id],
+    }),
+  }),
+)
+
+export const studentMedicalSummariesRelations = relations(
+  studentMedicalSummaries,
+  ({ one }) => ({
+    studentProfile: one(studentProfiles, {
+      fields: [studentMedicalSummaries.studentProfileId],
+      references: [studentProfiles.id],
     }),
   }),
 )

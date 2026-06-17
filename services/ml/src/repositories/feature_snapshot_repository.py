@@ -1,4 +1,7 @@
 from uuid import UUID
+import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import select
 
@@ -21,3 +24,23 @@ class FeatureSnapshotRepository(AsyncRepository[FeatureSnapshot]):
         )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
+
+    async def create_snapshot(
+        self,
+        *,
+        student_profile_id: UUID,
+        features: dict[str, Any],
+        feature_schema_version: str,
+        checksum: str,
+        source: str = "profile_snapshot",
+    ) -> FeatureSnapshot:
+        snapshot = FeatureSnapshot(
+            id=uuid.uuid4(),
+            student_profile_id=student_profile_id,
+            source=source,
+            features=features,
+            feature_schema_version=feature_schema_version,
+            checksum=checksum,
+            created_at=datetime.now(UTC),
+        )
+        return await self.add(snapshot)
