@@ -66,10 +66,10 @@ services:
       ml-service:
         condition: service_started
 
-  admin:
+  web:
     build:
-      context: ./apps/admin
-    container_name: admin
+      context: ./apps/web
+    container_name: web
     ports:
       - "3000:3000"
     depends_on:
