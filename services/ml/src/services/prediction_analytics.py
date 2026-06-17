@@ -251,6 +251,7 @@ def _serialize_prediction(
         "medical_risk": record.medical_risk,
         "final_risk": record.final_risk,
         "risk_level": record.risk_level,
+        "explanation": record.explanation,
         "inference_source": record.inference_source,
         "created_at": _serialize_datetime(record.created_at),
         "snapshot": _serialize_snapshot(snapshot) if snapshot is not None else None,

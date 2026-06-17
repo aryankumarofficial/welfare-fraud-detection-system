@@ -236,6 +236,7 @@ def test_worker_execution_marks_completed_and_stores_result(
                 },
                 risk_level="HIGH",
                 prediction_duration_ms=9,
+                explanation={"summary": "test"},
             )
 
     monkeypatch.setattr(module, "PredictionService", FakePredictionService)

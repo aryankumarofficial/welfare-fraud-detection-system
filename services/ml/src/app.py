@@ -17,11 +17,15 @@ from src.exceptions import (
 from src.predict import predict_all
 from src.schemas.feature_snapshot import InvalidFeatureSetError
 from src.services.prediction_analytics import PredictionAnalyticsService
+from src.services.alert_service import AlertService
+from src.services.drift_monitoring_service import DriftMonitoringService
+from src.services.model_evaluation_service import ModelEvaluationService
 from src.services.prediction_job_service import (
     PredictionJobService,
     QueuePredictionRequest,
     _serialize_job,
 )
+from src.services.prediction_review_service import PredictionReviewService, _serialize_review
 from src.services.prediction_service import PredictionService
 from src.services.snapshot_generator import SnapshotGenerator
 from src.test import run_test_predictions
@@ -80,6 +84,12 @@ class JobAttemptBody(BaseModel):
     error: str | None = None
 
 
+class PredictionReviewBody(BaseModel):
+    reviewer: str = Field(min_length=1)
+    decision: str = Field(default="pending")
+    notes: str | None = None
+
+
 @app.get("/")
 def home():
     return {"message": "Welfare Fraud Detection API is running"}
@@ -131,6 +141,7 @@ async def predict_profile(body: PredictProfileRequest):
                 ),
                 "risk_level": result.risk_level,
                 "prediction_duration_ms": result.prediction_duration_ms,
+                "explanation": result.explanation,
                 **result.risks,
             },
         }
@@ -252,6 +263,7 @@ async def predict_generated_snapshot(body: PredictProfileRequest):
                 ),
                 "risk_level": result.risk_level,
                 "prediction_duration_ms": result.prediction_duration_ms,
+                "explanation": result.explanation,
                 **result.risks,
             },
         }
@@ -292,6 +304,13 @@ async def queue_prediction(body: QueuePredictionBody):
             feature_snapshot_id=body.feature_snapshot_id,
         )
         return {"success": True, "data": _serialize_job(job)}
+
+
+@app.get("/predictions/reviews")
+async def get_prediction_reviews(decision: str | None = None, limit: int = 100):
+    async with get_db_session() as session:
+        service = PredictionReviewService(session)
+        return {"success": True, "data": await service.list_reviews(decision=decision, limit=limit)}
 
 
 @app.get("/predictions/{student_profile_id}")
@@ -342,6 +361,30 @@ async def get_prediction_analytics():
         return await service.get_prediction_analytics()
 
 
+@app.post("/predictions/{prediction_id}/review")
+async def create_prediction_review(prediction_id: UUID, body: PredictionReviewBody):
+    async with get_db_session() as session:
+        service = PredictionReviewService(session)
+        try:
+            review = await service.create_review(
+                prediction_id=prediction_id,
+                reviewer=body.reviewer,
+                decision=body.decision,
+                notes=body.notes,
+            )
+        except LookupError:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_NOT_FOUND"},
+            )
+        except ValueError:
+            return JSONResponse(
+                status_code=422,
+                content={"success": False, "error": "INVALID_REVIEW_DECISION"},
+            )
+        return {"success": True, "data": _serialize_review(review)}
+
+
 @app.get("/predictions/jobs/{job_id}")
 async def get_prediction_job(job_id: UUID):
     async with get_db_session() as session:
@@ -382,6 +425,27 @@ async def get_queue_analytics():
     async with get_db_session() as session:
         service = PredictionJobService(session)
         return await service.get_queue_analytics()
+
+
+@app.get("/analytics/model-performance")
+async def get_model_performance():
+    async with get_db_session() as session:
+        service = ModelEvaluationService(session)
+        return await service.get_model_performance()
+
+
+@app.get("/analytics/drift")
+async def get_drift_analytics(days: int = 7):
+    async with get_db_session() as session:
+        service = DriftMonitoringService(session)
+        return await service.get_drift_report(days=days)
+
+
+@app.get("/analytics/alerts")
+async def get_alerts():
+    async with get_db_session() as session:
+        service = AlertService(session)
+        return await service.get_alerts()
 
 
 @app.post("/internal/predictions/jobs/{job_id}/execute")

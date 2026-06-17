@@ -11,6 +11,7 @@ from src.predict import predict_all
 from src.repositories.model_repository import ModelRepository
 from src.repositories.prediction_repository import PredictionRepository
 from src.services.audit_service import PredictionAuditService
+from src.services.explainability_service import ExplainabilityService
 from src.services.feature_loader import FeatureLoader, LoadedFeatures
 from src.services.risk_classifier import RiskClassifier
 
@@ -24,6 +25,7 @@ class PredictionResult:
     risks: dict[str, float]
     risk_level: str
     prediction_duration_ms: int
+    explanation: dict[str, Any]
 
 
 class PredictionService:
@@ -38,6 +40,7 @@ class PredictionService:
         self._models = ModelRepository(session)
         self._audit = PredictionAuditService(session)
         self._classifier = RiskClassifier()
+        self._explainability = ExplainabilityService()
 
     async def predict_for_snapshot(
         self,
@@ -94,6 +97,11 @@ class PredictionService:
         model_version = await self._models.get_active()
         model_version_id = model_version.id if model_version is not None else None
         classification = self._classifier.classify(risks["final_risk"])
+        explanation = self._explainability.generate(
+            features=loaded.features,
+            risks=risks,
+            risk_level=classification.level,
+        )
 
         record = await self._predictions.create_prediction(
             student_profile_id=loaded.profile.id,
@@ -111,6 +119,7 @@ class PredictionService:
             medical_risk=risks["medical_risk"],
             final_risk=risks["final_risk"],
             risk_level=classification.level,
+            explanation=explanation,
             inference_source=inference_source,
         )
         await self._audit.prediction_executed(
@@ -125,6 +134,8 @@ class PredictionService:
                 "prediction_duration_ms": prediction_duration_ms,
                 "risk_level": classification.level,
                 "final_risk": risks["final_risk"],
+                "explanation_method": explanation["method"],
+                "top_contributing_features": explanation["top_contributing_features"],
             },
         )
 
@@ -136,6 +147,7 @@ class PredictionService:
             risks=risks,
             risk_level=classification.level,
             prediction_duration_ms=prediction_duration_ms,
+            explanation=explanation,
         )
 
     async def _run_inference(self, features: dict[str, Any]) -> dict[str, float]:

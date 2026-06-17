@@ -1,8 +1,11 @@
 from src.db.models.audit_log import AuditLog
+from src.db.models.drift_snapshot import DriftSnapshot
 from src.db.models.feature_snapshot import FeatureSnapshot
+from src.db.models.monitoring_alert import MonitoringAlert
 from src.db.models.model_version import ModelVersion
 from src.db.models.prediction_job import PredictionJob
 from src.db.models.prediction_record import PredictionRecord
+from src.db.models.prediction_review import PredictionReview
 from src.db.models.source_records import (
     StudentFinancialRecord,
     StudentMedicalSummary,
@@ -14,10 +17,13 @@ from src.db.models.user import User
 
 __all__ = [
     "AuditLog",
+    "DriftSnapshot",
     "FeatureSnapshot",
+    "MonitoringAlert",
     "ModelVersion",
     "PredictionJob",
     "PredictionRecord",
+    "PredictionReview",
     "StudentFinancialRecord",
     "StudentMedicalSummary",
     "StudentProfile",

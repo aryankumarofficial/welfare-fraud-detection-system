@@ -268,6 +268,7 @@ def test_predict_generate_endpoint_generates_predicts_and_returns_result(
             "medical_risk": 0.4,
             "final_risk": 0.25,
         },
+        explanation={"summary": "low risk"},
     )
 
     @asynccontextmanager

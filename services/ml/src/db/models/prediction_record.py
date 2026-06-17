@@ -1,7 +1,10 @@
 import uuid
 from datetime import datetime
 
+from typing import Any
+
 from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db.base import Base
@@ -43,6 +46,7 @@ class PredictionRecord(Base):
     medical_risk: Mapped[float] = mapped_column(Float, nullable=False)
     final_risk: Mapped[float] = mapped_column(Float, nullable=False)
     risk_level: Mapped[str | None] = mapped_column(String, nullable=True)
+    explanation: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     inference_source: Mapped[str] = mapped_column(
         Enum(*INFERENCE_SOURCES, name="inference_source", native_enum=True),
         nullable=False,

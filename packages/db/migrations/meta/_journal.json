@@ -36,6 +36,13 @@
       "when": 1781827200000,
       "tag": "0004_phase_6_async_prediction_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781913600000,
+      "tag": "0005_phase_7_model_monitoring",
+      "breakpoints": true
     }
   ]
 }

@@ -1,9 +1,12 @@
 import { relations } from "drizzle-orm"
 import { auditLogs } from "./audit-logs"
+import { driftSnapshots } from "./drift-snapshots"
 import { featureSnapshots } from "./feature-snapshots"
+import { monitoringAlerts } from "./monitoring-alerts"
 import { modelVersions } from "./model-versions"
 import { predictionRecords } from "./prediction-records"
 import { predictionJobs } from "./prediction-jobs"
+import { predictionReviews } from "./prediction-reviews"
 import {
   studentFinancialRecords,
   studentMedicalSummaries,
@@ -54,7 +57,7 @@ export const featureSnapshotsRelations = relations(
 
 export const predictionRecordsRelations = relations(
   predictionRecords,
-  ({ one }) => ({
+  ({ one, many }) => ({
     studentProfile: one(studentProfiles, {
       fields: [predictionRecords.studentProfileId],
       references: [studentProfiles.id],
@@ -71,8 +74,16 @@ export const predictionRecordsRelations = relations(
       fields: [predictionRecords.requestedByUserId],
       references: [users.id],
     }),
+    reviews: many(predictionReviews),
   }),
 )
+
+export const predictionReviewsRelations = relations(predictionReviews, ({ one }) => ({
+  prediction: one(predictionRecords, {
+    fields: [predictionReviews.predictionId],
+    references: [predictionRecords.id],
+  }),
+}))
 
 export const predictionJobsRelations = relations(predictionJobs, ({ one }) => ({
   studentProfile: one(studentProfiles, {
@@ -135,3 +146,7 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     references: [users.id],
   }),
 }))
+
+export const driftSnapshotsRelations = relations(driftSnapshots, () => ({}))
+
+export const monitoringAlertsRelations = relations(monitoringAlerts, () => ({}))

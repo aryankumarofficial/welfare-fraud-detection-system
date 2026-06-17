@@ -127,6 +127,7 @@ class PredictionJobService:
             "model_version_id": str(result.model_version_id) if result.model_version_id else None,
             "risk_level": result.risk_level,
             "prediction_duration_ms": result.prediction_duration_ms,
+            "explanation": result.explanation,
             **result.risks,
         }
         await self._jobs.mark_completed(

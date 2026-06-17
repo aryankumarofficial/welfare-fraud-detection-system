@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  jsonb,
   pgTable,
   real,
   text,
@@ -39,6 +40,7 @@ export const predictionRecords = pgTable(
     medicalRisk: real("medical_risk").notNull(),
     finalRisk: real("final_risk").notNull(),
     riskLevel: text("risk_level"),
+    explanation: jsonb("explanation").$type<Record<string, unknown>>(),
     inferenceSource: inferenceSourceEnum("inference_source")
       .notNull()
       .default("sync"),
