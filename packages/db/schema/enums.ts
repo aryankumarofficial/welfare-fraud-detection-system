@@ -1,11 +1,11 @@
 import { pgEnum } from "drizzle-orm/pg-core"
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "analyst", "viewer"])
-
 export const inferenceSourceEnum = pgEnum("inference_source", [
-  "sync_api",
-  "batch_worker",
-  "scheduled_job",
+  "manual",
+  "sync",
+  "async",
+  "scheduled",
+  "system",
 ])
 
 export const featureSourceEnum = pgEnum("feature_source", [

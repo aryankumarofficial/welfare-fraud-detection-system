@@ -25,6 +25,7 @@ export const predictionRecords = pgTable(
     modelVersionId: uuid("model_version_id").references(() => modelVersions.id, {
       onDelete: "set null",
     }),
+    jobId: uuid("job_id"),
     incomeRisk: real("income_risk").notNull(),
     casteRisk: real("caste_risk").notNull(),
     transactionRisk: real("transaction_risk").notNull(),
@@ -32,7 +33,7 @@ export const predictionRecords = pgTable(
     finalRisk: real("final_risk").notNull(),
     inferenceSource: inferenceSourceEnum("inference_source")
       .notNull()
-      .default("sync_api"),
+      .default("sync"),
     requestedByUserId: uuid("requested_by_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -45,5 +46,6 @@ export const predictionRecords = pgTable(
     index("prediction_records_created_at_idx").on(table.createdAt),
     index("prediction_records_final_risk_idx").on(table.finalRisk),
     index("prediction_records_model_version_id_idx").on(table.modelVersionId),
+    index("prediction_records_job_id_idx").on(table.jobId),
   ],
 )

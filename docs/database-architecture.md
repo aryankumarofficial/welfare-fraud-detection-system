@@ -1,6 +1,6 @@
 # Database Architecture
 
-Phase 1 establishes a shared PostgreSQL foundation for the Welfare Fraud Detection System without changing ML inference behavior.
+Phase 1 established the shared PostgreSQL foundation. Phase 1.1 refined the schema to decouple domain identity, ML features, and auth strategy without changing inference behavior.
 
 ## Overview
 
@@ -37,6 +37,54 @@ Phase 1 establishes a shared PostgreSQL foundation for the Welfare Fraud Detecti
 
 All services read and write the same PostgreSQL schema. Only `packages/db` creates or alters tables.
 
+## Design Principles (Phase 1.1)
+
+### Minimal users table
+
+`users` stores internal identity only: `id`, `external_auth_id`, timestamps.
+
+Auth credentials, roles, and session strategy are intentionally deferred. The project may adopt Better Auth, Auth.js, Clerk, Supabase Auth, Keycloak, or custom auth later. Those providers own credentials; this table links their subject IDs to internal UUIDs when needed.
+
+### Domain data separate from ML features
+
+`student_profiles` holds beneficiary identity and stable domain attributes (`name`, `date_of_birth`, `gender`, `region`, `external_id`). It does **not** store ML input fields.
+
+ML features live in `feature_snapshots.features` (JSONB), versioned by `feature_schema_version`. When models add or rename features, applications introduce a new schema version instead of altering profile tables.
+
+### Immutable feature snapshots
+
+```text
+student_profiles
+    ↓
+feature_snapshots   (append-only, immutable inputs)
+    ↓
+prediction_records  (outcomes linked to a snapshot)
+```
+
+Snapshots are never updated in place. Each inference event references a specific snapshot row, making audits reproducible. Prediction execution is not wired in this phase.
+
+### Provider-agnostic inference source
+
+`prediction_records.inference_source` uses execution intent, not queue vendor names:
+
+| Value | Meaning |
+| --- | --- |
+| `manual` | Operator-triggered action |
+| `sync` | Synchronous request/response path |
+| `async` | Background execution (any queue provider) |
+| `scheduled` | Cron or scheduled runner |
+| `system` | Internal automated process |
+
+Values like `bullmq` or `inngest` are avoided so the schema stays stable regardless of orchestration choice.
+
+### Reserved `job_id` on predictions
+
+`prediction_records.job_id` is a nullable UUID with **no foreign key**. It is reserved for a future `prediction_jobs` table. When workers arrive, predictions can be correlated to jobs without a disruptive migration.
+
+### Audit logs for humans and automation
+
+`audit_logs.ip_address` and `audit_logs.user_agent` are nullable. Workers, schedulers, and system processes may not have HTTP client context.
+
 ## Schema Ownership
 
 Drizzle owns the canonical schema in TypeScript:
@@ -47,31 +95,25 @@ Drizzle Kit generates versioned SQL files:
 
 - `packages/db/migrations/*.sql`
 
-Python SQLAlchemy models mirror the applied schema but do not generate migrations. When the schema changes:
-
-1. Update Drizzle schema in `packages/db`.
-2. Run `bun run db:generate`.
-3. Review the generated SQL.
-4. Apply with `bun run db:migrate`.
-5. Update SQLAlchemy models in `services/ml/src/db/models` if columns changed.
+Python SQLAlchemy models mirror the applied schema but do not generate migrations.
 
 ## Tables
 
 ### `users`
 
-Purpose: authentication and authorization for admin/API users.
+Purpose: internal identity anchor; auth provider linkage only.
 
-Important fields: `email`, `password_hash`, `role`, `is_active`.
+Important fields: `external_auth_id` (nullable until auth is integrated).
 
 Relationships: referenced by `student_profiles.created_by_user_id`, `prediction_records.requested_by_user_id`, `audit_logs.actor_user_id`.
 
-Indexes: `users_role_idx`.
+Indexes: `external_auth_id`.
 
 ### `student_profiles`
 
-Purpose: persisted beneficiary/student feature profile aligned with current ML input fields and future CSV ingestion (`external_id` maps to dataset `user_id`).
+Purpose: beneficiary identity and domain demographics. Not ML feature storage.
 
-Important fields: income, caste, transaction, and medical feature columns; `external_id`.
+Important fields: `external_id` (maps to dataset `user_id` during future CSV ingestion), `name`, `date_of_birth`, `gender`, `region`.
 
 Relationships: parent of `feature_snapshots` and `prediction_records`.
 
@@ -89,7 +131,7 @@ Indexes: unique `(name, version)`, `is_active`.
 
 ### `feature_snapshots`
 
-Purpose: immutable feature payloads used for inference auditing and reproducibility.
+Purpose: canonical, immutable storage for inference input features.
 
 Important fields: `features` (JSONB), `source`, `feature_schema_version`, `checksum`.
 
@@ -97,21 +139,23 @@ Relationships: belongs to `student_profiles`; referenced by `prediction_records`
 
 Indexes: `student_profile_id`, `checksum`, `created_at`.
 
+Append-only by convention: applications insert new rows; they do not update existing snapshot payloads.
+
 ### `prediction_records`
 
 Purpose: historical fraud risk outcomes.
 
-Important fields: `income_risk`, `caste_risk`, `transaction_risk`, `medical_risk`, `final_risk`, `inference_source`.
+Important fields: risk scores, `inference_source`, reserved `job_id`.
 
 Relationships: links profile, optional snapshot, optional model version, optional requesting user.
 
-Indexes: `student_profile_id`, `created_at`, `final_risk`, `model_version_id`.
+Indexes: `student_profile_id`, `created_at`, `final_risk`, `model_version_id`, `job_id`.
 
 ### `audit_logs`
 
-Purpose: security and operational audit trail.
+Purpose: security and operational audit trail for human and automated actors.
 
-Important fields: `action`, `resource_type`, `resource_id`, `metadata`.
+Important fields: `action`, `resource_type`, `resource_id`, `metadata`, nullable `ip_address`, nullable `user_agent`.
 
 Relationships: optional `actor_user_id` → `users`.
 
@@ -119,21 +163,13 @@ Indexes: `actor_user_id`, `action`, `created_at`, `(resource_type, resource_id)`
 
 ## Future Phase Tables (not implemented)
 
-These are intentionally deferred until worker orchestration is introduced:
-
 ### `prediction_jobs`
 
-Purpose: durable queue-agnostic job records for async/batch inference.
-
-Suggested fields: `id`, `student_profile_id`, `status`, `priority`, `attempts`, `scheduled_at`, `started_at`, `finished_at`, `last_error`.
+Purpose: durable queue-agnostic job records for async/batch inference. `prediction_records.job_id` will reference this table when introduced.
 
 ### `job_events`
 
 Purpose: append-only lifecycle events for observability across BullMQ, Inngest, or other providers.
-
-Suggested fields: `id`, `job_id`, `event_type`, `payload`, `created_at`.
-
-The current schema supports these additions without breaking existing tables because `prediction_records.inference_source` already distinguishes sync vs worker execution.
 
 ## Python Integration
 
@@ -144,75 +180,61 @@ FastAPI does not own migrations. It consumes the shared schema through:
 - `services/ml/src/db/models/*` — SQLAlchemy table mappings
 - `services/ml/src/db/repositories/base.py` — repository foundation
 
-Use `postgresql+asyncpg://` in Python settings. The config layer converts plain `postgresql://` URLs automatically.
-
-No prediction or preprocessing code was modified in Phase 1.
+No prediction or preprocessing code was modified in Phase 1 or Phase 1.1.
 
 ## Migration Workflow
 
 ### Development
 
-From the repository root:
-
 ```bash
-# Install workspace dependencies
 bun install
-
-# Start PostgreSQL
 docker compose up -d postgres
-
-# Generate SQL from schema changes
-bun run db:generate
-
-# Review files in packages/db/migrations
-
-# Apply migrations locally
+bun run db:generate    # after schema changes
 bun run db:migrate
 ```
 
-Optional:
+### Production / Docker
+
+A single command starts the full stack; migrations run automatically:
 
 ```bash
-bun run db:studio   # Drizzle Studio
-bun run db:push     # direct schema push for local prototyping only
-bun run db:check    # validate migration history
+docker compose up --build
 ```
 
-### Production
+Startup ordering enforced by Compose:
 
-1. Build and deploy application images.
-2. Run migrations before or during startup using the dedicated migrate step.
-3. Start API, web, and ML services only after PostgreSQL is healthy and migrations succeed.
+```text
+postgres (healthy)
+    ↓
+migrate (exits 0 on success)
+    ↓
+api / ml-service / admin
+```
 
-Docker Compose example:
+The `migrate` container exits after applying migrations. That is expected. Application services use `depends_on.migrate.condition: service_completed_successfully` so they never start on a failed or skipped migration.
+
+Manual migration is only needed for local development without the full Compose stack:
 
 ```bash
 docker compose up -d postgres
-docker compose run --rm migrate
-docker compose up -d api ml-service admin
+bun run db:migrate
 ```
-
-Startup ordering:
-
-1. PostgreSQL becomes healthy.
-2. `migrate` service applies pending SQL migrations.
-3. Application services start.
 
 ## Future Evolution
 
 | Phase | Database impact |
 | --- | --- |
-| CSV ingestion | populate `student_profiles` via `external_id`; write `feature_snapshots` with `source = csv_ingest` |
-| ID-based prediction | FastAPI loads profile by UUID instead of bulk payload; still stores `prediction_records` |
-| Worker orchestration | add `prediction_jobs` and `job_events`; set `inference_source = batch_worker` |
+| Auth integration | populate `users.external_auth_id`; auth tables may live in provider or extension tables |
+| CSV ingestion | populate `student_profiles` domain fields; write `feature_snapshots` with `source = csv_ingest` |
+| ID-based prediction | load profile + latest or specific snapshot by ID; store `prediction_records` |
+| Worker orchestration | add `prediction_jobs`; set `prediction_records.job_id` and `inference_source = async` |
 | Model rollout | register rows in `model_versions`; link predictions to active version |
 
 ## Risks and Mitigations
 
 | Risk | Mitigation |
 | --- | --- |
-| Schema drift between Drizzle and SQLAlchemy | Drizzle-only migrations; update Python models in the same PR as schema changes |
-| Migration failure during deploy | run migrations in a one-shot job before app rollout; keep migrations backward-compatible |
-| Connection exhaustion under load | tune `DB_POOL_MAX` / `DB_POOL_SIZE`; use PgBouncer if needed |
-| JSONB feature shape changes | version with `feature_schema_version`; validate before insert in future phases |
-| Queue vendor lock-in | defer queue-specific tables; use generic `prediction_jobs` design later |
+| Schema drift between Drizzle and SQLAlchemy | Drizzle-only migrations; update Python models in the same PR |
+| Enum migration on existing data | Phase 1.1 migration remaps `inference_source`; greenfield installs are unaffected |
+| ML feature shape changes | use `feature_schema_version`; never add ML columns to `student_profiles` |
+| Queue vendor lock-in | provider-agnostic `inference_source`; reserved `job_id` without FK until jobs table exists |

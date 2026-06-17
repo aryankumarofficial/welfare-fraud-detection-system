@@ -19,6 +19,7 @@ export const auditLogs = pgTable(
     resourceType: text("resource_type"),
     resourceId: text("resource_id"),
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    // Nullable: workers, schedulers, and system processes may not have client context.
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     createdAt: timestamp("created_at", { withTimezone: true })

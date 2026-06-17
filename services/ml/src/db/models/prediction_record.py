@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db.base import Base
 
-INFERENCE_SOURCES = ("sync_api", "batch_worker", "scheduled_job")
+INFERENCE_SOURCES = ("manual", "sync", "async", "scheduled", "system")
 
 
 class PredictionRecord(Base):
@@ -28,6 +28,7 @@ class PredictionRecord(Base):
         ForeignKey("model_versions.id", ondelete="SET NULL"),
         nullable=True,
     )
+    job_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
     income_risk: Mapped[float] = mapped_column(Float, nullable=False)
     caste_risk: Mapped[float] = mapped_column(Float, nullable=False)
     transaction_risk: Mapped[float] = mapped_column(Float, nullable=False)
@@ -36,7 +37,7 @@ class PredictionRecord(Base):
     inference_source: Mapped[str] = mapped_column(
         Enum(*INFERENCE_SOURCES, name="inference_source", native_enum=True),
         nullable=False,
-        default="sync_api",
+        default="sync",
     )
     requested_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),

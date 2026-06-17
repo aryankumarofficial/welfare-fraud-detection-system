@@ -73,7 +73,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
 
 volumes:
   postgres_data:

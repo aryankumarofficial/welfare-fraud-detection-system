@@ -27,7 +27,7 @@ ml:
 dev:
 	bun run dev & bun run api & bun run ml
 
-# Docker start
+# Docker start (postgres -> migrate -> apps; no manual migrate step required)
 docker-up:
 	docker compose up --build
 

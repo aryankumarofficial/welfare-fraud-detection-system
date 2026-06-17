@@ -12,6 +12,12 @@ bun install
 bun run db:migrate
 ```
 
+For the full stack (migrations run automatically before apps):
+
+```bash
+docker compose up --build
+```
+
 ## Scripts
 
 | Command | Description |
@@ -25,11 +31,11 @@ bun run db:migrate
 ## Usage
 
 ```ts
-import { db, studentProfiles, predictionRecords } from "@repo/db"
+import { db, studentProfiles, featureSnapshots } from "@repo/db"
 
 const profiles = await db.select().from(studentProfiles).limit(10)
 ```
 
-For long-lived servers, prefer `getDb()` and `closeDb()` from `@repo/db/client` when you need explicit lifecycle control.
+ML inference inputs belong in `feature_snapshots`, not `student_profiles`.
 
 See [docs/database-architecture.md](../../docs/database-architecture.md) for the full architecture guide.

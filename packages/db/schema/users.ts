@@ -1,22 +1,10 @@
-import {
-  boolean,
-  index,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core"
-import { userRoleEnum } from "./enums"
+import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 
 export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    email: text("email").notNull().unique(),
-    passwordHash: text("password_hash").notNull(),
-    role: userRoleEnum("role").notNull().default("analyst"),
-    displayName: text("display_name"),
-    isActive: boolean("is_active").notNull().default(true),
+    externalAuthId: text("external_auth_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -25,5 +13,5 @@ export const users = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [index("users_role_idx").on(table.role)],
+  (table) => [index("users_external_auth_id_idx").on(table.externalAuthId)],
 )
