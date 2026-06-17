@@ -3,6 +3,7 @@ import { auditLogs } from "./audit-logs"
 import { featureSnapshots } from "./feature-snapshots"
 import { modelVersions } from "./model-versions"
 import { predictionRecords } from "./prediction-records"
+import { predictionJobs } from "./prediction-jobs"
 import {
   studentFinancialRecords,
   studentMedicalSummaries,
@@ -29,6 +30,7 @@ export const studentProfilesRelations = relations(
     financialRecords: many(studentFinancialRecords),
     medicalSummaries: many(studentMedicalSummaries),
     predictionRecords: many(predictionRecords),
+    predictionJobs: many(predictionJobs),
     socialRecords: many(studentSocialRecords),
     transactionSummaries: many(studentTransactionSummaries),
   }),
@@ -46,6 +48,7 @@ export const featureSnapshotsRelations = relations(
       references: [studentProfiles.id],
     }),
     predictionRecords: many(predictionRecords),
+    predictionJobs: many(predictionJobs),
   }),
 )
 
@@ -70,6 +73,21 @@ export const predictionRecordsRelations = relations(
     }),
   }),
 )
+
+export const predictionJobsRelations = relations(predictionJobs, ({ one }) => ({
+  studentProfile: one(studentProfiles, {
+    fields: [predictionJobs.studentProfileId],
+    references: [studentProfiles.id],
+  }),
+  featureSnapshot: one(featureSnapshots, {
+    fields: [predictionJobs.featureSnapshotId],
+    references: [featureSnapshots.id],
+  }),
+  predictionRecord: one(predictionRecords, {
+    fields: [predictionJobs.predictionRecordId],
+    references: [predictionRecords.id],
+  }),
+}))
 
 export const studentFinancialRecordsRelations = relations(
   studentFinancialRecords,

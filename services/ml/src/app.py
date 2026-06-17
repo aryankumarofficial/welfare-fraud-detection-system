@@ -16,6 +16,12 @@ from src.exceptions import (
 )
 from src.predict import predict_all
 from src.schemas.feature_snapshot import InvalidFeatureSetError
+from src.services.prediction_analytics import PredictionAnalyticsService
+from src.services.prediction_job_service import (
+    PredictionJobService,
+    QueuePredictionRequest,
+    _serialize_job,
+)
 from src.services.prediction_service import PredictionService
 from src.services.snapshot_generator import SnapshotGenerator
 from src.test import run_test_predictions
@@ -56,6 +62,22 @@ class PredictProfileRequest(BaseModel):
 
 class GenerateSnapshotRequest(BaseModel):
     student_profile_id: UUID = Field(description="Beneficiary profile UUID")
+
+
+class QueuePredictionItem(BaseModel):
+    student_profile_id: UUID
+    feature_snapshot_id: UUID | None = None
+
+
+class QueuePredictionBody(BaseModel):
+    student_profile_id: UUID | None = None
+    feature_snapshot_id: UUID | None = None
+    predictions: list[QueuePredictionItem] | None = None
+
+
+class JobAttemptBody(BaseModel):
+    attempt: int = Field(default=1, ge=1, le=3)
+    error: str | None = None
 
 
 @app.get("/")
@@ -107,6 +129,8 @@ async def predict_profile(body: PredictProfileRequest):
                 "model_version_id": (
                     str(result.model_version_id) if result.model_version_id else None
                 ),
+                "risk_level": result.risk_level,
+                "prediction_duration_ms": result.prediction_duration_ms,
                 **result.risks,
             },
         }
@@ -226,6 +250,8 @@ async def predict_generated_snapshot(body: PredictProfileRequest):
                 "model_version_id": (
                     str(result.model_version_id) if result.model_version_id else None
                 ),
+                "risk_level": result.risk_level,
+                "prediction_duration_ms": result.prediction_duration_ms,
                 **result.risks,
             },
         }
@@ -236,3 +262,185 @@ def test():
     pridictions = run_test_predictions()
 
     return {"success": True, "result": pridictions}
+
+
+@app.post("/predictions/queue")
+async def queue_prediction(body: QueuePredictionBody):
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+
+        if body.predictions:
+            result = await service.enqueue_batch(
+                [
+                    QueuePredictionRequest(
+                        student_profile_id=item.student_profile_id,
+                        feature_snapshot_id=item.feature_snapshot_id,
+                    )
+                    for item in body.predictions
+                ]
+            )
+            return {"success": True, "data": result}
+
+        if body.student_profile_id is None:
+            return JSONResponse(
+                status_code=422,
+                content={"success": False, "error": "STUDENT_PROFILE_ID_REQUIRED"},
+            )
+
+        job = await service.enqueue_prediction(
+            student_profile_id=body.student_profile_id,
+            feature_snapshot_id=body.feature_snapshot_id,
+        )
+        return {"success": True, "data": _serialize_job(job)}
+
+
+@app.get("/predictions/{student_profile_id}")
+async def get_predictions_by_student_profile(student_profile_id: UUID):
+    async with get_db_session() as session:
+        service = PredictionAnalyticsService(session)
+        history = await service.get_prediction_history(student_profile_id)
+
+        if history is not None:
+            return {"success": True, "data": history}
+
+        details = await service.get_prediction_details(student_profile_id)
+        if details is not None:
+            return {"success": True, "data": details}
+
+        return JSONResponse(
+            status_code=404,
+            content={"success": False, "error": "PREDICTION_NOT_FOUND"},
+        )
+
+
+@app.get("/predictions/detail/{prediction_id}")
+async def get_prediction_by_id(prediction_id: UUID):
+    async with get_db_session() as session:
+        service = PredictionAnalyticsService(session)
+        result = await service.get_prediction_details(prediction_id)
+
+        if result is None:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_NOT_FOUND"},
+            )
+
+        return {"success": True, "data": result}
+
+
+@app.get("/metrics/predictions")
+async def get_prediction_metrics():
+    async with get_db_session() as session:
+        service = PredictionAnalyticsService(session)
+        return await service.get_operational_metrics()
+
+
+@app.get("/analytics/predictions")
+async def get_prediction_analytics():
+    async with get_db_session() as session:
+        service = PredictionAnalyticsService(session)
+        return await service.get_prediction_analytics()
+
+
+@app.get("/predictions/jobs/{job_id}")
+async def get_prediction_job(job_id: UUID):
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+        job = await service.get_job(job_id)
+        if job is None:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_JOB_NOT_FOUND"},
+            )
+        return {"success": True, "data": _serialize_job(job)}
+
+
+@app.get("/predictions/jobs/{job_id}/result")
+async def get_prediction_job_result(job_id: UUID):
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+        job = await service.get_job(job_id)
+        if job is None:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_JOB_NOT_FOUND"},
+            )
+        if job.status != "completed":
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "success": False,
+                    "error": "PREDICTION_JOB_NOT_COMPLETED",
+                    "status": job.status,
+                },
+            )
+        return {"success": True, "data": job.result}
+
+
+@app.get("/analytics/queue")
+async def get_queue_analytics():
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+        return await service.get_queue_analytics()
+
+
+@app.post("/internal/predictions/jobs/{job_id}/execute")
+async def execute_prediction_job(job_id: UUID, body: JobAttemptBody):
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+        try:
+            result = await service.execute_job(job_id, attempt=body.attempt)
+        except LookupError:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_JOB_NOT_FOUND"},
+            )
+        except Exception as exc:
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": "PREDICTION_JOB_FAILED", "detail": str(exc)},
+            )
+        return {"success": True, "data": result}
+
+
+@app.post("/internal/predictions/jobs/{job_id}/retrying")
+async def mark_prediction_job_retrying(job_id: UUID, body: JobAttemptBody):
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+        try:
+            job = await service.mark_retrying(
+                job_id,
+                attempt=body.attempt,
+                error=body.error or "Prediction job will be retried.",
+            )
+        except LookupError:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_JOB_NOT_FOUND"},
+            )
+        return {"success": True, "data": _serialize_job(job)}
+
+
+@app.post("/internal/predictions/jobs/{job_id}/failed")
+async def mark_prediction_job_failed(job_id: UUID, body: JobAttemptBody):
+    async with get_db_session() as session:
+        service = PredictionJobService(session)
+        try:
+            job = await service.mark_failed(
+                job_id,
+                attempt=body.attempt,
+                error=body.error or "Prediction job failed.",
+            )
+        except LookupError:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "PREDICTION_JOB_NOT_FOUND"},
+            )
+        return {"success": True, "data": _serialize_job(job)}
+
+
+@app.get("/dashboard/summary")
+async def get_dashboard_summary():
+    async with get_db_session() as session:
+        service = PredictionAnalyticsService(session)
+        return await service.get_dashboard_summary()

@@ -25,6 +25,21 @@ class FeatureSnapshotRepository(AsyncRepository[FeatureSnapshot]):
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
+    async def list_by_profile_id(
+        self,
+        student_profile_id: UUID,
+        *,
+        limit: int = 100,
+    ) -> list[FeatureSnapshot]:
+        statement = (
+            select(FeatureSnapshot)
+            .where(FeatureSnapshot.student_profile_id == student_profile_id)
+            .order_by(FeatureSnapshot.created_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+
     async def create_snapshot(
         self,
         *,

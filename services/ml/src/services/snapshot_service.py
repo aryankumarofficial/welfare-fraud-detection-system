@@ -9,6 +9,7 @@ from src.db.models.feature_snapshot import FeatureSnapshot
 from src.exceptions import SnapshotGenerationError
 from src.repositories.feature_snapshot_repository import FeatureSnapshotRepository
 from src.schemas.feature_snapshot import FEATURE_SCHEMA_VERSION_V1
+from src.services.audit_service import PredictionAuditService
 
 
 class SnapshotService:
@@ -16,6 +17,7 @@ class SnapshotService:
 
     def __init__(self, session: AsyncSession) -> None:
         self._snapshots = FeatureSnapshotRepository(session)
+        self._audit = PredictionAuditService(session)
 
     async def create_snapshot(
         self,
@@ -27,13 +29,20 @@ class SnapshotService:
         checksum = self._build_checksum(features)
 
         try:
-            return await self._snapshots.create_snapshot(
+            snapshot = await self._snapshots.create_snapshot(
                 student_profile_id=student_profile_id,
                 features=features,
                 feature_schema_version=FEATURE_SCHEMA_VERSION_V1,
                 checksum=checksum,
                 source=source,
             )
+            await self._audit.snapshot_generated(
+                snapshot_id=snapshot.id,
+                student_profile_id=student_profile_id,
+                checksum=snapshot.checksum,
+                feature_schema_version=snapshot.feature_schema_version,
+            )
+            return snapshot
         except Exception as exc:
             raise SnapshotGenerationError(
                 "Failed to persist generated feature snapshot.",

@@ -13,6 +13,9 @@
     "dev": "bun run --filter=admin dev",
     "api": "bun run --filter=api dev",
     "ml": "bun --filter @repo/ml-service dev",
+    "prediction:queue": "bun --filter @repo/workers prediction:queue",
+    "prediction:worker": "bun --filter @repo/workers prediction:worker",
+    "prediction:events": "bun --filter @repo/workers prediction:events",
     "db:generate": "bun run --filter @repo/db db:generate",
     "db:migrate": "bun run --filter @repo/db db:migrate",
     "db:push": "bun run --filter @repo/db db:push",
@@ -21,5 +24,9 @@
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "dev:all": "bun run api & bun run dev & bun run ml"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "typescript": "^6.0.3"
   }
 }

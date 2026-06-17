@@ -7,5 +7,13 @@
   "types": "./index.ts",
   "exports":{
     ".":"./index.ts"
+  },
+  "scripts": {
+    "prediction:queue": "bun src/predictions/server.ts",
+    "prediction:worker": "bun src/predictions/worker.ts",
+    "prediction:events": "bun src/predictions/events.ts"
+  },
+  "dependencies": {
+    "bullmq": "^5.34.2"
   }
 }

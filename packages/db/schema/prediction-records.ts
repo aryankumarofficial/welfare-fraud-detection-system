@@ -1,7 +1,9 @@
 import {
   index,
+  integer,
   pgTable,
   real,
+  text,
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core"
@@ -26,11 +28,17 @@ export const predictionRecords = pgTable(
       onDelete: "set null",
     }),
     jobId: uuid("job_id"),
+    predictionTimestamp: timestamp("prediction_timestamp", { withTimezone: true }),
+    modelName: text("model_name"),
+    modelVersion: text("model_version"),
+    snapshotChecksum: text("snapshot_checksum"),
+    predictionDurationMs: integer("prediction_duration_ms"),
     incomeRisk: real("income_risk").notNull(),
     casteRisk: real("caste_risk").notNull(),
     transactionRisk: real("transaction_risk").notNull(),
     medicalRisk: real("medical_risk").notNull(),
     finalRisk: real("final_risk").notNull(),
+    riskLevel: text("risk_level"),
     inferenceSource: inferenceSourceEnum("inference_source")
       .notNull()
       .default("sync"),
@@ -47,5 +55,7 @@ export const predictionRecords = pgTable(
     index("prediction_records_final_risk_idx").on(table.finalRisk),
     index("prediction_records_model_version_id_idx").on(table.modelVersionId),
     index("prediction_records_job_id_idx").on(table.jobId),
+    index("prediction_records_prediction_timestamp_idx").on(table.predictionTimestamp),
+    index("prediction_records_risk_level_idx").on(table.riskLevel),
   ],
 )

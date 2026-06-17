@@ -259,6 +259,8 @@ def test_predict_generate_endpoint_generates_predicts_and_returns_result(
         feature_snapshot_id=snapshot.id,
         prediction_id=uuid.uuid4(),
         model_version_id=None,
+        risk_level="LOW",
+        prediction_duration_ms=12,
         risks={
             "income_risk": 0.1,
             "caste_risk": 0.2,
