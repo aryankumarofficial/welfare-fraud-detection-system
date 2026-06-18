@@ -33,3 +33,18 @@ export const monitoringAlertSeverityEnum = pgEnum("monitoring_alert_severity", [
   "warning",
   "critical",
 ])
+
+export const modelStatusEnum = pgEnum("model_status", [
+  "DRAFT",
+  "VALIDATED",
+  "STAGING",
+  "PRODUCTION",
+  "ARCHIVED",
+  "ROLLED_BACK",
+])
+
+export const modelRoleEnum = pgEnum("model_role", [
+  "champion",
+  "challenger",
+  "none",
+])
