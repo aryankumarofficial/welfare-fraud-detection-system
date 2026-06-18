@@ -55,7 +55,10 @@ class PredictionQueueClient:
         request = Request(
             f"{self._base_url}{path}",
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "X-Queue-API-Key": os.getenv("QUEUE_API_KEY", "queue-change-me"),
+            },
             method="POST",
         )
         try:

@@ -94,7 +94,7 @@ class PredictionService:
             raise
         prediction_duration_ms = int((perf_counter() - started_at) * 1000)
 
-        model_version = await self._models.get_active()
+        model_version = await self._models.get_champion()
         model_version_id = model_version.id if model_version is not None else None
         classification = self._classifier.classify(risks["final_risk"])
         explanation = self._explainability.generate(

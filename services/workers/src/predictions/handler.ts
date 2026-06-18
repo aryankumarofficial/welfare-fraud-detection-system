@@ -7,6 +7,7 @@ async function postJson(path: string, body: unknown): Promise<unknown> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-Internal-API-Key": process.env.INTERNAL_API_KEY ?? "internal-change-me",
     },
     body: JSON.stringify(body),
   })

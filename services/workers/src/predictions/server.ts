@@ -19,6 +19,8 @@ function isPredictionBody(value: unknown): value is EnqueuePredictionBody {
   return "job_id" in value && "student_profile_id" in value
 }
 
+const QUEUE_API_KEY = process.env.QUEUE_API_KEY ?? "queue-change-me"
+
 Bun.serve({
   port: QUEUE_API_PORT,
   async fetch(request: Request) {
@@ -29,6 +31,14 @@ Bun.serve({
     }
 
     if (request.method === "POST" && url.pathname === "/predictions/enqueue") {
+      const authKey = request.headers.get("x-queue-api-key")
+      if (authKey !== QUEUE_API_KEY) {
+        return jsonResponse(
+          { success: false, error: "UNAUTHORIZED" },
+          { status: 401 },
+        )
+      }
+
       const body = await request.json().catch(() => null)
       if (!isPredictionBody(body)) {
         return jsonResponse(

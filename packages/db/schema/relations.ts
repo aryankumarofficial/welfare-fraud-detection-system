@@ -4,6 +4,8 @@ import { driftSnapshots } from "./drift-snapshots"
 import { featureSnapshots } from "./feature-snapshots"
 import { monitoringAlerts } from "./monitoring-alerts"
 import { modelVersions } from "./model-versions"
+import { modelEvaluationRuns } from "./model-evaluation-runs"
+import { modelLineageEvents } from "./model-lineage"
 import { predictionRecords } from "./prediction-records"
 import { predictionJobs } from "./prediction-jobs"
 import { predictionReviews } from "./prediction-reviews"
@@ -41,6 +43,8 @@ export const studentProfilesRelations = relations(
 
 export const modelVersionsRelations = relations(modelVersions, ({ many }) => ({
   predictionRecords: many(predictionRecords),
+  evaluationRuns: many(modelEvaluationRuns),
+  lineageEvents: many(modelLineageEvents),
 }))
 
 export const featureSnapshotsRelations = relations(
@@ -150,3 +154,17 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
 export const driftSnapshotsRelations = relations(driftSnapshots, () => ({}))
 
 export const monitoringAlertsRelations = relations(monitoringAlerts, () => ({}))
+
+export const modelEvaluationRunsRelations = relations(modelEvaluationRuns, ({ one }) => ({
+  modelVersion: one(modelVersions, {
+    fields: [modelEvaluationRuns.modelVersionId],
+    references: [modelVersions.id],
+  }),
+}))
+
+export const modelLineageEventsRelations = relations(modelLineageEvents, ({ one }) => ({
+  modelVersion: one(modelVersions, {
+    fields: [modelLineageEvents.modelVersionId],
+    references: [modelVersions.id],
+  }),
+}))
