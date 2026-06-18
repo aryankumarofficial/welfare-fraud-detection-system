@@ -7,8 +7,6 @@
  * Run: npx ts-node scripts/seed-demo-data.ts
  */
 
-import { randomUUID } from "crypto";
-
 // Demo data types
 interface StudentProfile {
   student_profile_id: string;
@@ -92,7 +90,11 @@ interface ModelVersion {
 
 // Helper functions
 function generateId(): string {
-  return randomUUID();
+  const uuid = (globalThis as any).crypto?.randomUUID?.();
+  if (typeof uuid === "string") {
+    return uuid;
+  }
+  return `id_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
 
 function generateTimestamp(daysAgo: number = 0): string {
@@ -199,16 +201,16 @@ export const demoData = {
     snapshotIds: string[],
     modelId: string
   ): PredictionRecord[] => {
-    const riskLevels: Array<"HIGH" | "MEDIUM" | "LOW"> = [
+    const riskLevels = [
       "HIGH",
       "MEDIUM",
       "LOW",
       "MEDIUM",
       "LOW",
-    ];
+    ] as const;
 
     return profileIds.map((profileId, idx) => {
-      const riskLevel = riskLevels[idx];
+      const riskLevel = riskLevels[idx % riskLevels.length] as typeof riskLevels[number];
       const baseRisk = riskLevel === "HIGH" ? 0.8 : riskLevel === "MEDIUM" ? 0.5 : 0.2;
 
       return {
@@ -236,14 +238,14 @@ export const demoData = {
    * Generate prediction reviews
    */
   predictionReviews: (predictionIds: string[]): PredictionReview[] => {
-    const decisions = ["confirmed_fraud", "not_fraud", "under_investigation"];
-    const reviewers = ["analyst_1", "analyst_2", "senior_analyst"];
+    const decisions = ["confirmed_fraud", "not_fraud", "under_investigation"] as const;
+    const reviewers = ["analyst_1", "analyst_2", "senior_analyst"] as const;
 
     return predictionIds.map((predictionId, idx) => ({
       review_id: generateId(),
       prediction_id: predictionId,
-      reviewer: reviewers[idx % reviewers.length],
-      decision: decisions[idx % decisions.length],
+      reviewer: reviewers[idx % reviewers.length] as typeof reviewers[number],
+      decision: decisions[idx % decisions.length] as typeof decisions[number],
       notes:
         idx % 3 === 0
           ? "Inconsistencies in income declaration require further verification"
@@ -514,7 +516,8 @@ export async function seedDemoData(): Promise<void> {
 }
 
 // Run if executed directly
-if (require.main === module) {
+const isDirectExecution = (import.meta as any)?.main === true;
+if (isDirectExecution) {
   seedDemoData().catch(console.error);
 }
 
