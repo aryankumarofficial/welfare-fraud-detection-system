@@ -184,3 +184,44 @@ export interface PredictionReviewsResponse {
   notes: string | null;
   created_at: string;
 }
+
+export interface ModelSummary {
+  model_version_id: string;
+  name: string;
+  version: string;
+  status: string;
+  role?: string | null;
+  created_at?: string | null;
+}
+
+export interface ModelEvaluationRun {
+  evaluation_run_id: string;
+  dataset_name: string;
+  dataset_version?: string | null;
+  precision?: number | null;
+  recall?: number | null;
+  false_positive_rate?: number | null;
+}
+
+export interface ModelDetail extends ModelSummary {
+  description?: string | null;
+  deployed_at?: string | null;
+  promoted_by?: string | null;
+  artifact_uri?: string | null;
+  feature_schema_version?: string | null;
+  configuration?: Record<string, unknown> | null;
+  evaluation_runs?: ModelEvaluationRun[] | null;
+}
+
+export interface ModelHealthResponse {
+  champion?: {
+    name: string;
+    version: string;
+  } | null;
+  false_positive_rate?: number | null;
+  total_registered_models?: number | null;
+  latest_evaluation?: {
+    precision?: number | null;
+    false_positive_rate?: number | null;
+  } | null;
+}

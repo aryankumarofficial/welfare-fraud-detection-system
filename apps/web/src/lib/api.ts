@@ -2,7 +2,10 @@ import type {
   AlertsResponse,
   DashboardSummary,
   DriftAnalyticsResponse,
+  ModelDetail,
+  ModelHealthResponse,
   ModelPerformanceResponse,
+  ModelSummary,
   PredictionAnalyticsResponse,
   PredictionDetail,
   PredictionGenerationResult,
@@ -12,20 +15,10 @@ import type {
   QueueAnalyticsResponse,
   SnapshotGenerationResult,
 } from "@/lib/types";
+import { getStoredAccessToken } from "@/lib/auth";
 
 const API_BASE_URL =
   process.env.ML_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const ANALYST_USERNAME = process.env.ANALYST_USERNAME;
-const ANALYST_PASSWORD = process.env.ANALYST_PASSWORD;
-
-interface TokenResponse {
-  access_token: string;
-  expires_in: number;
-  role: string;
-}
-
-let cachedToken: string | null = null;
-let cachedTokenExpiry = 0;
 
 export class ApiRequestError extends Error {
   public status: number;
@@ -44,52 +37,12 @@ function getApiUrl(path: string) {
 }
 
 async function getAuthToken(): Promise<string> {
-  const now = Date.now() / 1000;
-
-  if (cachedToken && cachedTokenExpiry > now + 5) {
-    return cachedToken;
+  const browserToken = getStoredAccessToken();
+  if (!browserToken) {
+    throw new ApiRequestError("No access token found. Please log in.", 401);
   }
 
-  if (!ANALYST_USERNAME || !ANALYST_PASSWORD) {
-    throw new ApiRequestError(
-      "Missing ANALYST_USERNAME or ANALYST_PASSWORD environment variables.",
-      500
-    );
-  }
-
-  const response = await fetch(getApiUrl("/auth/token"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      username: ANALYST_USERNAME,
-      password: ANALYST_PASSWORD,
-    }),
-    cache: "no-store",
-  });
-
-  const body = await response.json().catch(() => null);
-  if (!response.ok || body == null || typeof body !== "object") {
-    throw new ApiRequestError(
-      "Unable to authenticate with the ML backend.",
-      response.status,
-      body
-    );
-  }
-
-  if (body.success === false) {
-    throw new ApiRequestError(body.error || "Authentication failed.", response.status, body);
-  }
-
-  const tokenResponse = body as TokenResponse;
-  if (!tokenResponse.access_token) {
-    throw new ApiRequestError("Backend did not return an access token.", response.status, body);
-  }
-
-  cachedToken = tokenResponse.access_token;
-  cachedTokenExpiry = now + Math.max(0, tokenResponse.expires_in - 5);
-  return cachedToken;
+  return browserToken;
 }
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -141,9 +94,11 @@ export async function getModelPerformance(): Promise<ModelPerformanceResponse> {
   return fetchJson<ModelPerformanceResponse>("/analytics/model-performance");
 }
 
-export async function getDriftAnalytics(
-  days = 7
-): Promise<DriftAnalyticsResponse> {
+export async function getModelHealth(): Promise<ModelHealthResponse> {
+  return fetchJson<ModelHealthResponse>("/analytics/model-health");
+}
+
+export async function getDriftAnalytics(days = 7): Promise<DriftAnalyticsResponse> {
   return fetchJson<DriftAnalyticsResponse>(`/analytics/drift?days=${days}`);
 }
 
@@ -206,6 +161,36 @@ export async function createPredictionReview(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reviewer, decision, notes }),
+  });
+}
+
+export async function getModels(): Promise<ModelSummary[]> {
+  return fetchJson<ModelSummary[]>("/models");
+}
+
+export async function getModelDetail(modelId: string): Promise<ModelDetail> {
+  return fetchJson<ModelDetail>(`/models/${modelId}`);
+}
+
+export async function compareModels(ids: string): Promise<ModelDetail[]> {
+  return fetchJson<ModelDetail[]>(`/models/compare?ids=${encodeURIComponent(ids)}`);
+}
+
+export async function promoteModel(modelId: string): Promise<ModelDetail> {
+  return fetchJson<ModelDetail>(`/models/${modelId}/promote`, {
+    method: "POST",
+  });
+}
+
+export async function rollbackModel(modelId: string): Promise<ModelDetail> {
+  return fetchJson<ModelDetail>(`/models/${modelId}/rollback`, {
+    method: "POST",
+  });
+}
+
+export async function archiveModel(modelId: string): Promise<ModelDetail> {
+  return fetchJson<ModelDetail>(`/models/${modelId}/archive`, {
+    method: "POST",
   });
 }
 

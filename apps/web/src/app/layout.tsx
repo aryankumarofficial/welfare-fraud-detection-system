@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { AuthProvider } from "@/components/auth/auth-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -38,17 +39,19 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <div className="relative flex min-h-screen flex-col">
-            <div className="pointer-events-none fixed inset-0 -z-10">
-              <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background" />
-              <div className="absolute inset-0 bg-grid-pattern opacity-[0.4]" />
+          <AuthProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <div className="pointer-events-none fixed inset-0 -z-10">
+                <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background" />
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.4]" />
+              </div>
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
             </div>
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
