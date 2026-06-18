@@ -38,9 +38,9 @@ jobs:
           pip install -r requirements.txt
 
       # Verify Next.js app builds
-      - name: Build Admin
+      - name: Build WEB
         run: |
-          cd apps/admin
+          cd apps/web
           bun install
           bun run build || true
 
