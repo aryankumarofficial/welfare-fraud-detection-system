@@ -14,8 +14,8 @@ import {
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "Schemes", href: "/schemes" },
-  { label: "Analytics", href: "/analytics" },
+  { label: "Predictions", href: "/admin/predictions" },
+  { label: "Analytics", href: "/admin/analytics" },
   { label: "Dashboard", href: "/admin/dashboard" },
 ];
 
@@ -66,8 +66,8 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" className="hidden md:flex">
-              Admin Panel
+            <Button asChild size="sm" className="hidden md:flex">
+              <Link href="/admin/dashboard">Admin Panel</Link>
             </Button>
 
             <Sheet open={open} onOpenChange={setOpen}>
