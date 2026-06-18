@@ -15,6 +15,7 @@ import {
 const navItems = [
   { label: "Home", href: "/" },
   { label: "Predictions", href: "/admin/predictions" },
+  { label: "Workflows", href: "/admin/workflows" },
   { label: "Analytics", href: "/admin/analytics" },
   { label: "Dashboard", href: "/admin/dashboard" },
 ];

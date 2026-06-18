@@ -19,6 +19,26 @@ export interface PredictionSnapshot {
   created_at: string;
 }
 
+export interface SnapshotGenerationResult {
+  feature_snapshot_id: string;
+  student_profile_id: string;
+  feature_schema_version: string | null;
+  source: string | null;
+  checksum: string | null;
+  features: Record<string, unknown> | null;
+}
+
+export interface PredictionGenerationResult {
+  prediction_id: string;
+  student_profile_id: string;
+  feature_snapshot_id: string | null;
+  model_version_id: string | null;
+  risk_level: RiskLevel;
+  prediction_duration_ms: number | null;
+  explanation: string | null;
+  [key: string]: unknown;
+}
+
 export interface PredictionDetail {
   prediction_id: string;
   student_profile_id: string;

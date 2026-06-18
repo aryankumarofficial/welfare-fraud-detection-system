@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, Bell, ShieldCheck, Sparkles, Terminal, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, Bell, Rocket, ShieldCheck, Sparkles, Terminal, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -15,6 +15,12 @@ const cards = [
     description: "Browse prediction history and inspect individual results.",
     href: "/admin/predictions",
     icon: Terminal,
+  },
+  {
+    title: "Workflows",
+    description: "Run snapshot, prediction, queue, and review flows for a profile.",
+    href: "/admin/workflows",
+    icon: Rocket,
   },
   {
     title: "Queue Monitoring",

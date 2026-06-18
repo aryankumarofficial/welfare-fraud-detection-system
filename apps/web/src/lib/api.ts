@@ -5,10 +5,12 @@ import type {
   ModelPerformanceResponse,
   PredictionAnalyticsResponse,
   PredictionDetail,
+  PredictionGenerationResult,
   PredictionHistoryResponse,
   PredictionJob,
   PredictionReviewsResponse,
   QueueAnalyticsResponse,
+  SnapshotGenerationResult,
 } from "@/lib/types";
 
 const API_BASE_URL =
@@ -162,6 +164,49 @@ export async function getPredictionReviews(
 ): Promise<PredictionReviewsResponse[]> {
   const query = decision ? `?decision=${encodeURIComponent(decision)}` : "";
   return fetchJson<PredictionReviewsResponse[]>(`/predictions/reviews${query}`);
+}
+
+export async function generateSnapshot(
+  studentProfileId: string
+): Promise<SnapshotGenerationResult> {
+  return fetchJson<SnapshotGenerationResult>("/snapshot/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ student_profile_id: studentProfileId }),
+  });
+}
+
+export async function generatePrediction(
+  studentProfileId: string
+): Promise<PredictionGenerationResult> {
+  return fetchJson<PredictionGenerationResult>("/predict/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ student_profile_id: studentProfileId }),
+  });
+}
+
+export async function queuePrediction(
+  studentProfileId: string
+): Promise<PredictionJob> {
+  return fetchJson<PredictionJob>("/predictions/queue", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ student_profile_id: studentProfileId }),
+  });
+}
+
+export async function createPredictionReview(
+  predictionId: string,
+  reviewer: string,
+  decision: string,
+  notes?: string
+): Promise<PredictionReviewsResponse> {
+  return fetchJson<PredictionReviewsResponse>(`/predictions/${predictionId}/review`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reviewer, decision, notes }),
+  });
 }
 
 export async function getAlertSeverityLabel(severity: string): Promise<string> {
