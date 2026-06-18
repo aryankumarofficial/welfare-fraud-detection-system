@@ -10,6 +10,7 @@
   "scripts": {
     "setup": "bun install && bun run setup:ml",
     "setup:ml": "cd services/ml && python -m venv venv && venv/Scripts/pip install -r requirements.txt",
+    "import:csv": "bun run scripts/import-csv.ts",
     "dev": "bun run --filter=admin dev",
     "api": "bun run --filter=api dev",
     "ml": "bun --filter @repo/ml-service dev",

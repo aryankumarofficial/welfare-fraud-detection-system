@@ -649,6 +649,37 @@ async def get_dashboard_summary():
         return await service.get_dashboard_summary()
 
 
+@app.get("/admin/import/status", dependencies=[Depends(require_analyst)])
+async def get_import_status():
+    async with get_db_session() as session:
+        statements = {
+            "profiles": "SELECT COUNT(*) FROM student_profiles",
+            "financial_records": "SELECT COUNT(*) FROM student_financial_records",
+            "social_records": "SELECT COUNT(*) FROM student_social_records",
+            "transaction_records": "SELECT COUNT(*) FROM student_transaction_summaries",
+            "medical_records": "SELECT COUNT(*) FROM student_medical_summaries",
+            "imported_at": "SELECT MAX(created_at) FROM student_profiles",
+        }
+
+        counts: dict[str, int | str | None] = {}
+        for key, statement in statements.items():
+            result = await session.execute(text(statement))
+            value = result.scalar_one()
+            counts[key] = value
+
+        imported_at = counts.pop("imported_at")
+        imported_at_iso = imported_at.isoformat() if imported_at is not None else None
+
+        return {
+            "success": True,
+            "data": {
+                **counts,
+                "imported_at": imported_at_iso,
+                "status": "completed",
+            },
+        }
+
+
 # ── Model Registry & Lifecycle Endpoints ─────────────────────────────
 
 

@@ -29,6 +29,19 @@ services:
     command: sh -c "bun install && bun run db:migrate"
     restart: "no"
 
+  csv-importer:
+    image: oven/bun:1.3.5
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/welfare
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: sh -c "bun install && bun run import:csv"
+    restart: "no"
+
   redis:
     image: redis:7
     ports:
@@ -56,6 +69,8 @@ services:
       postgres:
         condition: service_healthy
       migrate:
+        condition: service_completed_successfully
+      csv-importer:
         condition: service_completed_successfully
 
   prediction-queue:
