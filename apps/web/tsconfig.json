@@ -5,13 +5,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@repo/db": ["../../packages/db/index.ts"],
-      "@repo/db/*": ["../../packages/db/*"],
-      "@repo/types/*": ["../../packages/types/src/*"],
-      "@repo/analytics/*": ["../../packages/analytics/src/*"],
-      "@repo/llm/*": ["../../packages/llm/src/*"],
-      "@repo/email/*": ["../../packages/email/src/*"]
-            
     }
   }
 }

@@ -1,6 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+"use client";
+
+import { useApi } from "@/hooks/use-api";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Database, AlertTriangle, Sparkles, Layers } from "lucide-react";
+import {
+  Activity,
+  Database,
+  AlertTriangle,
+  Sparkles,
+  Layers,
+} from "lucide-react";
 import { getDashboardSummary } from "@/lib/api";
 
 const statCards = [
@@ -36,19 +51,46 @@ const statCards = [
   },
 ];
 
-export default async function DashboardPage() {
-  const summary = await getDashboardSummary();
+export default function DashboardPage() {
+  const { data: summary, error, loading } = useApi(getDashboardSummary);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-border bg-muted/50 p-8 text-center">
+          Loading dashboard…
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!summary) {
+    return null;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Live Dashboard</p>
+          <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+            Live Dashboard
+          </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             System summary and risk posture
           </h1>
           <p className="mt-3 text-base leading-7 text-muted-foreground max-w-2xl">
-            Live backend data for predictions, models, and operational risk indicators.
+            Live backend data for predictions, models, and operational risk
+            indicators.
           </p>
         </div>
         <Badge variant="secondary" className="uppercase tracking-[0.18em]">
@@ -83,25 +125,32 @@ export default async function DashboardPage() {
           <CardHeader className="px-6 py-5">
             <CardTitle>High risk insights</CardTitle>
             <CardDescription>
-              Monitor the ratio of profiles and active high risk predictions across the platform.
+              Monitor the ratio of profiles and active high risk predictions
+              across the platform.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6 pt-0">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-3xl border border-border p-5">
-                <p className="text-sm font-medium text-muted-foreground">High Risk</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  High Risk
+                </p>
                 <p className="mt-3 text-3xl font-semibold text-rose-600">
                   {summary.high_risk}
                 </p>
               </div>
               <div className="rounded-3xl border border-border p-5">
-                <p className="text-sm font-medium text-muted-foreground">Medium Risk</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Medium Risk
+                </p>
                 <p className="mt-3 text-3xl font-semibold text-amber-600">
                   {summary.medium_risk}
                 </p>
               </div>
               <div className="rounded-3xl border border-border p-5">
-                <p className="text-sm font-medium text-muted-foreground">Low Risk</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Low Risk
+                </p>
                 <p className="mt-3 text-3xl font-semibold text-emerald-600">
                   {summary.low_risk}
                 </p>
