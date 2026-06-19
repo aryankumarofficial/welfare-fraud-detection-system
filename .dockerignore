@@ -1,0 +1,154 @@
+# Node dependencies
+node_modules
+**/node_modules
+**/node_modules/**
+
+# Bun caches and temporary files (keep bun.lock and bun.lockb)
+.bun
+.bun/*
+.bun-cache
+.bun-install
+.cache/bun
+.bunfig
+
+# Next.js build output and static export
+.next
+.next/**
+out
+out/**
+.output
+.output/**
+
+# Turborepo cache
+.turbo
+.turbo/**
+
+# Common build output directories
+dist
+dist/**
+build
+build/**
+generated
+generated/**
+
+# Generic bundler caches
+.cache
+.cache/**
+.parcel-cache
+.parcel-cache/**
+.vite
+.vite/**
+
+# Coverage and test artifacts
+coverage
+coverage/**
+.nyc_output
+.jest
+.jest/**
+coverage.xml
+
+# Logs and temporary files
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+tmp
+temp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode
+.vscode/**
+.idea
+.idea/**
+*.sublime-workspace
+*.sublime-project
+
+# Docker runtime artifacts (keep main Dockerfiles and compose files)
+.docker
+docker-compose.override.yml
+docker-compose.local.yml
+docker-compose.*.local.yml
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+
+# Git metadata
+.git
+.git/**
+
+# Package manager caches (keep lockfiles)
+.pnp.*
+.pnpm-store
+.pnpm-store/**
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+
+# Misc caches and build artifacts
+*.tsbuildinfo
+*.cache
+*.db
+*.sqlite
+*.sqlite3
+__pycache__
+*.pyc
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Keep important files required for Docker builds
+!package.json
+!**/package.json
+!package-lock.json
+!**/package-lock.json
+!yarn.lock
+!**/yarn.lock
+!pnpm-lock.yaml
+!**/pnpm-lock.yaml
+!bun.lock
+!**/bun.lock
+!bun.lockb
+!**/bun.lockb
+
+# Keep Prisma schema and migrations
+!prisma/schema.prisma
+!prisma/migrations/**
+!**/prisma/**
+!**/migrations/**
+
+# Keep Dockerfiles and compose files
+!Dockerfile
+!**/Dockerfile
+!docker-compose.yml
+!docker-compose.*.yml
+!docker-compose.*.yaml
+
+# Keep CSV datasets and explicit data files needed for builds
+!*.csv
+!data/*.csv
+!**/*.csv
+
+# Keep documentation and repo metadata
+!README.md
+!LICENSE
+!docs/**
+!*.md
+
+# Notes:
+# - We ignore typical build/caches/logs but explicitly re-include package manifests, lockfiles,
+#   Dockerfiles, docker-compose files, Prisma schemas/migrations and CSV datasets so Docker builds
+#   can COPY them into images as needed.
