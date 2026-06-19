@@ -1,0 +1,36 @@
+# Exclude node modules and local build outputs for web build context
+
+node_modules
+node_modules/**
+.next
+.next/**
+.dist
+.dist/**
+.out
+.out/**
+.turbo
+.turbo/\*_
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+.env
+.env._
+
+# Keep package manifests and lockfiles
+
+!package.json
+!bun.lock
+!bun.lockb
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+
+# Keep source files and Dockerfile
+
+!pages
+!src
+!public
+!app
+!next.config.js
+!Dockerfile

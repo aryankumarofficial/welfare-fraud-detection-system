@@ -1,0 +1,12 @@
+# Python build context ignores
+
+**pycache**
+_.pyc
+venv
+.env
+.env._
+node_modules
+node_modules/\*\*
+\*.log
+.DS_Store
+Thumbs.db
