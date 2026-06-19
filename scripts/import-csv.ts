@@ -88,7 +88,9 @@ function parseCsvRows(text: string): Array<Record<string, string>> {
       `CSV row ${rowIndex + 2} does not match header column count. Expected ${header.length}, got ${row.length}.`,
     );
 
-    return Object.fromEntries(header.map((key, index) => [key, row[index].trim()]));
+    return Object.fromEntries(
+      header.map((key, index) => [key, row[index].trim()]),
+    );
   });
 }
 
@@ -100,7 +102,10 @@ function parseFloatField(value: string, label: string): number {
 
 function parseIntField(value: string, label: string): number {
   const parsed = Number(value);
-  assert(Number.isInteger(parsed), `Invalid integer value for ${label}: ${value}`);
+  assert(
+    Number.isInteger(parsed),
+    `Invalid integer value for ${label}: ${value}`,
+  );
   return parsed;
 }
 
@@ -109,13 +114,18 @@ function profileExternalId(userId: string): string {
   return userId;
 }
 
-async function readCsvFile(fileName: string): Promise<Array<Record<string, string>>> {
+async function readCsvFile(
+  fileName: string,
+): Promise<Array<Record<string, string>>> {
   const filePath = join(DATA_DIR, fileName);
   const text = await Bun.file(filePath).text();
   return parseCsvRows(text);
 }
 
-function areRecordsEqual<T extends Record<string, unknown>>(existing: T, values: T): boolean {
+function areRecordsEqual<T extends Record<string, unknown>>(
+  existing: T,
+  values: T,
+): boolean {
   for (const key of Object.keys(values)) {
     const existingValue = existing[key];
     const newValue = values[key];
@@ -150,10 +160,15 @@ async function main() {
   let medicalInserted = 0;
 
   await client.begin(async (tx) => {
-    for (const row of [...incomeRows, ...casteRows, ...transactionRows, ...medicalRows]) {
+    for (const row of [
+      ...incomeRows,
+      ...casteRows,
+      ...transactionRows,
+      ...medicalRows,
+    ]) {
       const externalId = profileExternalId(row.user_id);
       if (!profiles.has(externalId)) {
-        const region = row.state ?? undefined;
+        const region = row.state ?? null;
         const result = await tx`
           INSERT INTO student_profiles (external_id, region)
           VALUES (${externalId}, ${region})
@@ -162,7 +177,10 @@ async function main() {
           RETURNING id;
         `;
         const profileId = result[0]?.id;
-        assert(profileId, `Failed to create or load student_profiles for external_id=${externalId}`);
+        assert(
+          profileId,
+          `Failed to create or load student_profiles for external_id=${externalId}`,
+        );
         profiles.set(externalId, { id: profileId, region });
       }
     }
@@ -175,11 +193,20 @@ async function main() {
 
       const values = {
         income_in_rs: parseFloatField(row.income_in_rs, "income_in_rs"),
-        land_owned_acres: parseFloatField(row.land_owned_acres, "land_owned_acres"),
+        land_owned_acres: parseFloatField(
+          row.land_owned_acres,
+          "land_owned_acres",
+        ),
         vehicles_owned: parseIntField(row.vehicles_owned, "vehicles_owned"),
-        electricity_consumption: parseFloatField(row.electricity_consumption, "electricity_consumption"),
+        electricity_consumption: parseFloatField(
+          row.electricity_consumption,
+          "electricity_consumption",
+        ),
         pending_loans: parseIntField(row.pending_loans, "pending_loans"),
-        business_ownership: parseIntField(row.business_ownership, "business_ownership"),
+        business_ownership: parseIntField(
+          row.business_ownership,
+          "business_ownership",
+        ),
       };
 
       const existing = await tx`
@@ -222,8 +249,14 @@ async function main() {
       const values = {
         caste: row.caste,
         father_caste: row.father_caste,
-        avg_caste_population_per: parseFloatField(row.avg_caste_population_per, "avg_caste_population_per"),
-        officer_approvals_per_day: parseFloatField(row.officer_approvals_per_day, "officer_approvals_per_day"),
+        avg_caste_population_per: parseFloatField(
+          row.avg_caste_population_per,
+          "avg_caste_population_per",
+        ),
+        officer_approvals_per_day: parseFloatField(
+          row.officer_approvals_per_day,
+          "officer_approvals_per_day",
+        ),
       };
 
       const existing = await tx`
@@ -260,12 +293,30 @@ async function main() {
       assert(profile, `Profile missing for transaction user_id=${externalId}`);
       const studentProfileId = profile.id;
       const values = {
-        weekly_spending: parseFloatField(row.weekly_spending, "weekly_spending"),
-        monthly_spending: parseFloatField(row.monthly_spending, "monthly_spending"),
-        transaction_count: parseIntField(row.transaction_count, "transaction_count"),
-        avg_transaction_value: parseFloatField(row.avg_transaction_value, "avg_transaction_value"),
-        luxury_items_bought: parseIntField(row.luxury_items_bought, "luxury_items_bought"),
-        weekend_spending_ratio: parseFloatField(row.weekend_spending_ratio, "weekend_spending_ratio"),
+        weekly_spending: parseFloatField(
+          row.weekly_spending,
+          "weekly_spending",
+        ),
+        monthly_spending: parseFloatField(
+          row.monthly_spending,
+          "monthly_spending",
+        ),
+        transaction_count: parseIntField(
+          row.transaction_count,
+          "transaction_count",
+        ),
+        avg_transaction_value: parseFloatField(
+          row.avg_transaction_value,
+          "avg_transaction_value",
+        ),
+        luxury_items_bought: parseIntField(
+          row.luxury_items_bought,
+          "luxury_items_bought",
+        ),
+        weekend_spending_ratio: parseFloatField(
+          row.weekend_spending_ratio,
+          "weekend_spending_ratio",
+        ),
       };
 
       const existing = await tx`
@@ -306,10 +357,19 @@ async function main() {
       assert(profile, `Profile missing for medical user_id=${externalId}`);
       const studentProfileId = profile.id;
       const values = {
-        hospital_visits_per_year: parseIntField(row.hospital_visits_per_year, "hospital_visits_per_year"),
+        hospital_visits_per_year: parseIntField(
+          row.hospital_visits_per_year,
+          "hospital_visits_per_year",
+        ),
         claim_frequency: parseIntField(row.claim_frequency, "claim_frequency"),
-        medical_claim_amount: parseFloatField(row.medical_claim_amount, "medical_claim_amount"),
-        avg_claim_amount: parseFloatField(row.avg_claim_amount, "avg_claim_amount"),
+        medical_claim_amount: parseFloatField(
+          row.medical_claim_amount,
+          "medical_claim_amount",
+        ),
+        avg_claim_amount: parseFloatField(
+          row.avg_claim_amount,
+          "avg_claim_amount",
+        ),
         chronic_disease: parseIntField(row.chronic_disease, "chronic_disease"),
       };
 
@@ -356,21 +416,27 @@ async function main() {
 
   const summary = totals[0];
   console.log("CSV import completed successfully.");
-  console.log(JSON.stringify({
-    profiles: Number(summary.profiles),
-    financial_records: Number(summary.financial_records),
-    social_records: Number(summary.social_records),
-    transaction_records: Number(summary.transaction_records),
-    medical_records: Number(summary.medical_records),
-    imported_at: summary.imported_at?.toISOString?.() ?? null,
-    status: "completed",
-    inserted: {
-      financialInserted,
-      socialInserted,
-      transactionInserted,
-      medicalInserted,
-    },
-  }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        profiles: Number(summary.profiles),
+        financial_records: Number(summary.financial_records),
+        social_records: Number(summary.social_records),
+        transaction_records: Number(summary.transaction_records),
+        medical_records: Number(summary.medical_records),
+        imported_at: summary.imported_at?.toISOString?.() ?? null,
+        status: "completed",
+        inserted: {
+          financialInserted,
+          socialInserted,
+          transactionInserted,
+          medicalInserted,
+        },
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 main().catch((error) => {

@@ -9,8 +9,8 @@ from typing import Any
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, BaseSettings, Field
-from pydantic_settings import SettingsConfigDict
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class SystemRole(str, Enum):
@@ -54,10 +54,6 @@ class AuthSettings(BaseSettings):
 
     internal_api_key: str = Field(default="internal-change-me", alias="INTERNAL_API_KEY")
     queue_api_key: str = Field(default="queue-change-me", alias="QUEUE_API_KEY")
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 def _base64_encode(data: bytes) -> str:
