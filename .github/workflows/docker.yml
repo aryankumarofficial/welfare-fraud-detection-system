@@ -28,11 +28,6 @@ jobs:
           docker build -t ghcr.io/${{ github.repository }}/web -f apps/web/Dockerfile .
           docker push ghcr.io/${{ github.repository }}/web
 
-      - name: Build API Image
-        run: |
-          docker build -t ghcr.io/${{ github.repository }}/api ./apps/api
-          docker push ghcr.io/${{ github.repository }}/api
-
       - name: Build ML Image
         run: |
           docker build -t ghcr.io/${{ github.repository }}/ml ./services/ml

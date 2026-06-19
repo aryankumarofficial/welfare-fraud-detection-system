@@ -125,24 +125,6 @@ services:
         condition: service_started
     command: sh -c "bun install && bun --filter @repo/workers prediction:events"
 
-  api:
-    build:
-      context: ./apps/api
-    container_name: api
-    ports:
-      - "3001:3000"
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/welfare
-    depends_on:
-      postgres:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
-      redis:
-        condition: service_started
-      ml-service:
-        condition: service_started
-
   web:
     build:
       context: ./apps/web
@@ -154,7 +136,7 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
-      api:
+      ml-service:
         condition: service_started
 
 volumes:

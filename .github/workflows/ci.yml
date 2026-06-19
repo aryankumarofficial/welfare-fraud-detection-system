@@ -44,12 +44,6 @@ jobs:
           bun install
           bun run build || true
 
-      # Build API
-      - name: Build API
-        run: |
-          cd apps/api
-          bun install
-          bun run build || true
 
       # Test ML service import
       - name: Test ML Services
